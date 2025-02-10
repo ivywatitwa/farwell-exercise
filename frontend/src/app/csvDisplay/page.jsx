@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const CsvDataDisplay = () => {
     const [csvDataList, setCsvDataList] = useState([]);
@@ -8,16 +9,26 @@ const CsvDataDisplay = () => {
     const [csvContent, setCsvContent] = useState({ header: [], data: [] });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const fetchCsvDataList = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const response = await axios.get("http://localhost:8000/api/csv/data", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                if (!token) {
+                    setIsAuthenticated(false);
+                    router.replace("/auth/login");
+                    return;
+                }
+                const response = await axios.get(
+                    "http://localhost:8000/api/csv/data",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
                 setCsvDataList(response.data);
             } catch (err) {
                 setError(err.message || "Failed to fetch CSV data list.");
@@ -27,11 +38,15 @@ const CsvDataDisplay = () => {
         fetchCsvDataList();
     }, []);
 
+    if (!isAuthenticated) {
+        return <div>Loading...</div>;
+    }
+
     const handleCsvSelection = async (id) => {
         setSelectedCsvId(id);
         setIsLoading(true);
         setError(null);
-        setCsvContent({ header: [], data: [] }); 
+        setCsvContent({ header: [], data: [] });
 
         try {
             const token = localStorage.getItem("token");
@@ -44,9 +59,14 @@ const CsvDataDisplay = () => {
                 }
             );
 
-            setCsvContent({ header: response.data.header, data: response.data.data });
+            setCsvContent({
+                header: response.data.header,
+                data: response.data.data,
+            });
         } catch (err) {
-            setError(err.response?.data?.message || "Failed to fetch CSV content.");
+            setError(
+                err.response?.data?.message || "Failed to fetch CSV content."
+            );
         } finally {
             setIsLoading(false);
         }
@@ -60,7 +80,10 @@ const CsvDataDisplay = () => {
                 </h1>
 
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                    <div
+                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
+                        role="alert"
+                    >
                         <strong className="font-bold">Error!</strong>
                         <span className="block sm:inline">{error}</span>
                     </div>
@@ -76,10 +99,17 @@ const CsvDataDisplay = () => {
                             {csvDataList.map((csv) => (
                                 <li key={csv.id} className="py-2">
                                     <button
-                                        onClick={() => handleCsvSelection(csv.id)}
-                                        className={`text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200 ${selectedCsvId === csv.id ? 'font-semibold' : ''}`}
+                                        onClick={() =>
+                                            handleCsvSelection(csv.id)
+                                        }
+                                        className={`text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200 ${
+                                            selectedCsvId === csv.id
+                                                ? "font-semibold"
+                                                : ""
+                                        }`}
                                     >
-                                        CSV ID: {csv.id} {/* Display ID instead of file name */}
+                                        CSV ID: {csv.id}{" "}
+                                        {/* Display ID instead of file name */}
                                     </button>
                                 </li>
                             ))}
@@ -93,37 +123,56 @@ const CsvDataDisplay = () => {
                         </h2>
 
                         {isLoading ? (
-                            <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+                            <p className="text-gray-500 dark:text-gray-400">
+                                Loading...
+                            </p>
                         ) : (
                             <>
-                                {csvContent.header.length > 0 && csvContent.data.length > 0 ? (
+                                {csvContent.header.length > 0 &&
+                                csvContent.data.length > 0 ? (
                                     <div className="overflow-x-auto">
                                         <table className="min-w-full leading-normal">
                                             <thead>
                                                 <tr>
-                                                    {csvContent.header.map((header, index) => (
-                                                        <th
-                                                            key={index}
-                                                            className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
-                                                        >
-                                                            {header}
-                                                        </th>
-                                                    ))}
+                                                    {csvContent.header.map(
+                                                        (header, index) => (
+                                                            <th
+                                                                key={index}
+                                                                className="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+                                                            >
+                                                                {header}
+                                                            </th>
+                                                        )
+                                                    )}
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {csvContent.data.map((row, rowIndex) => (
-                                                    <tr key={rowIndex}>
-                                                        {csvContent.header.map((header, colIndex) => (
-                                                            <td
-                                                                key={colIndex}
-                                                                className="px-5 py-5 border-b border-gray-200 bg-white text-sm dark:bg-gray-900 dark:border-gray-700"
-                                                            >
-                                                                <p className="text-gray-900 whitespace-no-wrap dark:text-white">{row[header] || ''}</p>
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                ))}
+                                                {csvContent.data.map(
+                                                    (row, rowIndex) => (
+                                                        <tr key={rowIndex}>
+                                                            {csvContent.header.map(
+                                                                (
+                                                                    header,
+                                                                    colIndex
+                                                                ) => (
+                                                                    <td
+                                                                        key={
+                                                                            colIndex
+                                                                        }
+                                                                        className="px-5 py-5 border-b border-gray-200 bg-white text-sm dark:bg-gray-900 dark:border-gray-700"
+                                                                    >
+                                                                        <p className="text-gray-900 whitespace-no-wrap dark:text-white">
+                                                                            {row[
+                                                                                header
+                                                                            ] ||
+                                                                                ""}
+                                                                        </p>
+                                                                    </td>
+                                                                )
+                                                            )}
+                                                        </tr>
+                                                    )
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>

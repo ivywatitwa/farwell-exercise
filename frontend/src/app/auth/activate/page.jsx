@@ -16,7 +16,6 @@ const Activate = () => {
         activation_code: "",
     });
 
-    // Handle input changes
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({
@@ -25,7 +24,6 @@ const Activate = () => {
         });
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
 

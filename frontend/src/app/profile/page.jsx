@@ -44,7 +44,7 @@ const Profile = () => {
             setUser({
                 ...response.data,
                 profile_picture_url: response.data.profile_picture
-                    ? `http://localhost:8000/storage/${response.data.profile_picture}` 
+                    ? `http://localhost:8000/storage/${response.data.profile_picture}`
                     : "",
             });
 
@@ -89,7 +89,7 @@ const Profile = () => {
         try {
             let formDataToSend = new FormData();
 
-            formDataToSend.append("_method", "PUT"); 
+            formDataToSend.append("_method", "PUT");
             formDataToSend.append("name", formData.name);
             formDataToSend.append("email", formData.email);
 
@@ -110,17 +110,24 @@ const Profile = () => {
             }
 
             const response = await axios.post(
-                `http://localhost:8000/api/users/profile`, 
+                `http://localhost:8000/api/users/profile`,
                 formDataToSend,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
-                    withCredentials: true, 
+                    withCredentials: true,
                 }
             );
-
-            console.log("Profile updated successfully:", response.data);
+            if (response.data) {
+                setUser({
+                    ...response.data,
+                    profile_picture_url: response.data.profile_picture
+                        ? `http://localhost:8000/storage/${response.data.profile_picture}`
+                        : "",
+                });
+                setIsEditing(false);
+            }
         } catch (error) {
             console.error("Full error:", error);
             console.error("Response data:", error.response?.data);
@@ -253,7 +260,7 @@ const Profile = () => {
                                             onClick={() =>
                                                 setShowPasswordForm(true)
                                             }
-                                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                                            className="px-4 py-2 border border-gray-300 text-gray-400 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                                         >
                                             Change Password
                                         </button>

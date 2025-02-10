@@ -157,27 +157,31 @@ const Profile = () => {
                 passwordData,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
                     },
                 }
             );
-            setShowPasswordForm(false);
-            setPasswordData({
-                current_password: "",
-                new_password: "",
-                new_password_confirmation: "",
-            });
+
             alert("Password updated successfully!");
+            localStorage.removeItem("token");
+            router.push("auth/login");
+            
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.message) {
-                alert(error.response.data.message); 
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ) {
+                alert(error.response.data.message);
             } else {
                 alert("An unexpected error occurred. Please try again.");
             }
             console.error("Error updating password:", error);
         }
     };
-    
+
     const handleLogout = async () => {
         try {
             const response = await axios.post(

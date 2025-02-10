@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Authentication;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Password;
 
 class StoreLoginRequest extends FormRequest
 {
@@ -23,17 +24,16 @@ class StoreLoginRequest extends FormRequest
     {
         return [
             'email' => 'required|string|email',
-            'password' => 'required|string|min:8',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.required' => 'Email is required',
-            'email.email' => 'Please enter a valid email address',
-            'password.required' => 'Password is required',
-            'password.min' => 'Password must be at least 8 characters',
+           'password' => [
+                'required',
+                'string',
+                'min:8',
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
+            ],
         ];
     }
 }

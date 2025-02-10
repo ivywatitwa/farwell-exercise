@@ -1,13 +1,14 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Models\User;
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Authentication\StoreChangePasswordRequest;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,7 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'profile_picture' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
+            'profile_picture' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -49,61 +50,74 @@ class UserController extends Controller
         return response()->json(['message' => 'Profile updated successfully', 'user' => $user], 200);
     }
 
-public function show($id)
-{
-    $user = User::find($id);
-    if (!$user) {
-        return response()->json(['message' => 'User not found'], 404);
-    }
-    return response()->json($user);
-}
+    public function show($id)
+    {
+        $logUser = Auth::user();
 
-public function changePassword(StoreChangePasswordRequest $request, User $user)
-{
-    Log::info($request->all());
-
-    // No need to validate again; the request has already been validated
-    $validated = $request->validated(); // Retrieves the already validated data
-
-    Log::info($validated);
-
-    // Update the user's password
-    $user->update([
-        'password' => Hash::make($validated['new_password']),
-    ]);
-
-    return response()->json(['message' => 'Password updated successfully']);
-}
-
-
-public function update(Request $request)
-{
-    Log::info($request->all());
-
-    Log::info('Files in request:', $request->allFiles());
-    Log::info('Has file?', [$request->hasFile('profile_picture')]);
-
-
-    $user = Auth::user();
-    Log::info($user);
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email,' . $user->id,
-        'profile_picture' => 'nullable|image|max:2048' // 2MB Max
-    ]);
-    
-    if ($request->hasFile('profile_picture')) {
-        if ($user->profile_picture) {
-            Storage::delete($user->profile_picture);
+        if ($logUser->id != $id) {
+            return response()->json(['message' => 'Forbidden'], 403);
         }
-        
-        $path = $request->file('profile_picture')->store('profile-pictures', 'public');
-        $validated['profile_picture'] = $path;
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        return response()->json($user);
     }
 
-    $user->update($validated);
+    public function changePassword(StoreChangePasswordRequest $request, User $user)
+    {
+        try {
+            $validated = $request->validated();
+    
+            Log::info($validated);
+            if (!Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'message' => 'The current password is incorrect.',
+                ], 422);
+            }
+            $user->update([
+                'password' => Hash::make($validated['new_password']),
+            ]);
+    
+            return response()->json([
+                'message' => 'Password updated successfully',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error updating password: ' . $e->getMessage());
+    
+            return response()->json([
+                'message' => 'An unexpected error occurred. Please try again later.',
+            ], 500);
+        }
+    }
 
-    return response()->json($user);
-}
+    public function update(Request $request)
+    {
+        try {
+            Log::info($request->all());
+            $user = Auth::user();
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'profile_picture' => 'nullable|file|mimes:jpeg,png,jpg,gif'
+            ]);
 
+            if ($request->hasFile('profile_picture')) {
+                if ($user->profile_picture) {
+                    Storage::delete($user->profile_picture);
+                }
+
+                $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+                $validated['profile_picture'] = $path;
+            }
+
+            $user->update($validated);
+
+            return response()->json($user);
+        } catch (\Exception $e) {
+            Log::info($e->getMessage());
+        }
+    }
 }

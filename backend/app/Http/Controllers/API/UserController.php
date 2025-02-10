@@ -31,12 +31,13 @@ class UserController extends Controller
         return response()->json($user);
     }
 
-    public function changePassword(StoreChangePasswordRequest $request, User $user)
+    public function changePassword(StoreChangePasswordRequest $request)
     {
         try {
+
+            $user = Auth::user();
             $validated = $request->validated();
-    
-            Log::info($validated);
+            
             if (!Hash::check($validated['current_password'], $user->password)) {
                 return response()->json([
                     'message' => 'The current password is incorrect.',

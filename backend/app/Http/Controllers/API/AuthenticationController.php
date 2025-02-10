@@ -98,7 +98,7 @@ class AuthenticationController extends Controller
         ], 400);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
         if (Auth::check()) {
             Auth::user()->currentAccessToken()->delete();

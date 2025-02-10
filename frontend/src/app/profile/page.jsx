@@ -172,7 +172,7 @@ const Profile = () => {
         try {
             const response = await axios.post(
                 "http://localhost:8000/api/logout",
-                user,
+                {},
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -182,7 +182,7 @@ const Profile = () => {
                 }
             );
 
-            if (response.success) {
+            if (response.data.success) {
                 localStorage.removeItem("token");
                 router.push("/auth/login");
             } else {

@@ -157,9 +157,7 @@ const Profile = () => {
                 passwordData,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem(
-                            "token"
-                        )}`,
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
                 }
             );
@@ -169,11 +167,17 @@ const Profile = () => {
                 new_password: "",
                 new_password_confirmation: "",
             });
+            alert("Password updated successfully!");
         } catch (error) {
+            if (error.response && error.response.data && error.response.data.message) {
+                alert(error.response.data.message); 
+            } else {
+                alert("An unexpected error occurred. Please try again.");
+            }
             console.error("Error updating password:", error);
         }
     };
-
+    
     const handleLogout = async () => {
         try {
             const response = await axios.post(
@@ -376,33 +380,37 @@ const Profile = () => {
                                         >
                                             Current Password
                                         </label>
-                                        <input
-                                            type={
-                                                isVisible ? "text" : "password"
-                                            }
-                                            name="current_password"
-                                            id="current_password"
-                                            value={
-                                                passwordData.current_password
-                                            }
-                                            autoComplete="current_password"
-                                            onChange={handlePasswordChange}
-                                            className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                            required
-                                        />{" "}
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setIsVisible(!isVisible)
-                                            }
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
-                                        >
-                                            {isVisible ? (
-                                                <EyeOff className="h-5 w-5" />
-                                            ) : (
-                                                <Eye className="h-5 w-5" />
-                                            )}
-                                        </button>
+                                        <div className="relative w-full">
+                                            <input
+                                                type={
+                                                    isVisible
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                name="current_password"
+                                                id="current_password"
+                                                value={
+                                                    passwordData.current_password
+                                                }
+                                                autoComplete="current_password"
+                                                onChange={handlePasswordChange}
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                                required
+                                            />{" "}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setIsVisible(!isVisible)
+                                                }
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                                            >
+                                                {isVisible ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label
@@ -411,31 +419,37 @@ const Profile = () => {
                                         >
                                             New Password
                                         </label>
-                                        <input
-                                            type={
-                                                isVisible ? "text" : "password"
-                                            }
-                                            name="new_password"
-                                            id="new_password"
-                                            value={passwordData.new_password}
-                                            autoComplete="new_password"
-                                            onChange={handlePasswordChange}
-                                            className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                            required
-                                        />{" "}
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setIsVisible(!isVisible)
-                                            }
-                                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
-                                        >
-                                            {isVisible ? (
-                                                <EyeOff className="h-5 w-5" />
-                                            ) : (
-                                                <Eye className="h-5 w-5" />
-                                            )}
-                                        </button>
+                                        <div className="relative w-full">
+                                            <input
+                                                type={
+                                                    isVisible
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                name="new_password"
+                                                id="new_password"
+                                                value={
+                                                    passwordData.new_password
+                                                }
+                                                autoComplete="new_password"
+                                                onChange={handlePasswordChange}
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                                required
+                                            />{" "}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setIsVisible(!isVisible)
+                                                }
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                                            >
+                                                {isVisible ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div>
                                         <label
@@ -444,20 +458,37 @@ const Profile = () => {
                                         >
                                             Confirm New Password
                                         </label>
-                                        <input
-                                            type={
-                                                isVisible ? "text" : "password"
-                                            }
-                                            name="new_password_confirmation"
-                                            id="new_password_confirmation"
-                                            value={
-                                                passwordData.new_password_confirmation
-                                            }
-                                            autoComplete="new_password_confirmation"
-                                            onChange={handlePasswordChange}
-                                            className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                            required
-                                        />
+                                        <div className="relative w-full">
+                                            <input
+                                                type={
+                                                    isVisible
+                                                        ? "text"
+                                                        : "password"
+                                                }
+                                                name="new_password_confirmation"
+                                                id="new_password_confirmation"
+                                                value={
+                                                    passwordData.new_password_confirmation
+                                                }
+                                                autoComplete="new_password_confirmation"
+                                                onChange={handlePasswordChange}
+                                                className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                                required
+                                            />{" "}
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setIsVisible(!isVisible)
+                                                }
+                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                                            >
+                                                {isVisible ? (
+                                                    <EyeOff className="h-5 w-5" />
+                                                ) : (
+                                                    <Eye className="h-5 w-5" />
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="flex gap-4 pt-4">
                                         <button

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter} from "next/navigation";
 
@@ -8,6 +8,20 @@ const Upload = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState("");
     const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            router.replace('/auth/login');
+        } else {
+            setIsAuthenticated(true); 
+        }
+    }, [router]);
+
+    if (!isAuthenticated) {
+        return <div>Loading...</div>;
+    }
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);

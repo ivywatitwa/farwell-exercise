@@ -1,93 +1,77 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Api;
+use App\Http\Controllers\Controller; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use App\Http\Requests\Authentication\StoreLoginRequest;
+use App\Http\Requests\Authentication\StoreActivationCodeRequest;
+use App\Http\Requests\Authentication\StoreRegisterRequest;
 
 class AuthenticationController extends Controller
 {
-    public function register(Request $request)
+    public function register(StoreRegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'activation_code' => Str::random(6),
+                'is_active' => false
+            ]);
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Registration successful. Please check your email for the activation code.',
+                'activation_code' => $user->activation_code 
+            ], 201);
+    
+        } catch (\Exception $e) {
+            Log::error('Error during registration: ' . $e->getMessage());
+    
+            return response()->json([
+                'success' => false,
+                'message' => 'Registration failed. Please try again later.',
+                'error' => $e->getMessage() 
+            ], 500);
         }
+    }   
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'activation_code' => Str::random(40), // Generate activation code
-        ]);
-
-        // You'd typically send an email here, but for this assessment:
-        $request->session()->put('activation_code', $user->activation_code);
-        $request->session()->put('user_id', $user->id);
-
-        return response()->json(['message' => 'Registration successful.  Activation code stored in session.', 'userId' => $user->id], 201);
-    }
-
-    public function activate(Request $request)
+    public function activate(StoreActivationCodeRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'activation_code' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-
-        $storedActivationCode = $request->session()->get('activation_code');
-        $userId = $request->session()->get('user_id');
-
-        if (!$storedActivationCode || !$userId) {
-            return response()->json(['message' => 'Invalid activation request.'], 400);
-        }
-
-
-        if ($request->activation_code !== $storedActivationCode) {
-            return response()->json(['message' => 'Invalid activation code.'], 400);
-        }
-
-        $user = User::find($userId);
+        $user = User::where('email', $request->email)
+            ->where('activation_code', $request->activation_code)
+            ->first();
 
         if (!$user) {
-            return response()->json(['message' => 'User not found.'], 404);
+            return response()->json([
+                'message' => 'Invalid activation code'
+            ], 400);
         }
 
+        if ($user->is_active) {
+            return response()->json([
+                'message' => 'Account is already activated'
+            ], 400);
+        }
 
         $user->is_active = true;
-        $user->activation_code = null;
         $user->save();
 
-        $request->session()->forget('activation_code');
-        $request->session()->forget('user_id');
-
-
-        return response()->json(['message' => 'Account activated successfully.'], 200);
+        return response()->json([
+            'message' => 'Account activated successfully',
+            'user' => $user
+        ], 200);
     }
-
-    public function login(Request $request)
+    
+    public function login(StoreLoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
@@ -95,7 +79,9 @@ class AuthenticationController extends Controller
 
             if (!$user->is_active) {
                 Auth::logout();
-                return response()->json(['message' => 'Account not activated. Please activate your account.'], 403);
+                return response()->json([
+                    'message' => 'Account not activated. Please activate your account.'
+                ], 403);
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -107,18 +93,22 @@ class AuthenticationController extends Controller
             ], 200);
         }
 
-        return response()->json(['message' => 'Invalid login credentials'], 401);
+        return response()->json([
+            'message' => 'Invalid login credentials'
+        ], 400);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        $request->user()->tokens()->delete();
+        if (Auth::check()) {
+            Auth::user()->currentAccessToken()->delete();
+            return response()->json([
+                'message' => 'Successfully logged out'
+            ]);
+        }
 
-        return response()->json(['message' => 'Successfully logged out'], 200);
-    }
-
-    public function profile()
-    {
-        return response()->json(Auth::user());
+        return response()->json([
+            'message' => 'No active session'
+        ], 401);
     }
 }

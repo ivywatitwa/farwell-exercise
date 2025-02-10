@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from "react";
 import axios from "axios";
+import { useRouter} from "next/navigation";
 
 const Upload = () => {
     const [file, setFile] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const router = useRouter();
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -25,18 +27,21 @@ const Upload = () => {
             const token = localStorage.getItem("token");
             setIsLoading(true);
             const response = await axios.post(
-                "http://localhost:8000/api/upload-csv", 
+                "http://localhost:8000/api/upload-csv",
                 formData,
                 {
                     headers: {
                         "Content-Type": "multipart/form-data",
-                        "Authorization": `Bearer ${token}`
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
             setMessage(response.data.message || "File uploaded successfully!");
+            router.push('/csvDisplay')
         } catch (error) {
-            setMessage(error.response?.data?.message || "Error uploading file.");
+            setMessage(
+                error.response?.data?.message || "Error uploading file."
+            );
         } finally {
             setIsLoading(false);
         }
@@ -50,7 +55,10 @@ const Upload = () => {
                         <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
                             Upload CSV
                         </h1>
-                        <form className="space-y-4 md:space-y-6" onSubmit={handleUpload}>
+                        <form
+                            className="space-y-4 md:space-y-6"
+                            onSubmit={handleUpload}
+                        >
                             <div>
                                 <label
                                     htmlFor="csv_data"

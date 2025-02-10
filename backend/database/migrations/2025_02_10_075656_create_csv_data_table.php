@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('csv_data', function (Blueprint $table) {
             $table->id();
+            $table->string('file_path');
             $table->timestamps();
         });
     }

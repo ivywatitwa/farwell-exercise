@@ -80,58 +80,50 @@ const Profile = () => {
     };
 
     const handleUpdateProfile = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        try {
-            let formDataToSend = new FormData();
+    try {
+        console.log("formdata", formData);
 
-            console.log("Original formData:", {
-                name: formData.name,
-                email: formData.email,
-                profile_picture: formData.profile_picture,
-            });
-
-            formDataToSend.append("name", formData.name);
-            formDataToSend.append("email", formData.email);
-
-            if (formData.profile_picture) {
-                formDataToSend.append(
-                    "profile_picture",
-                    formData.profile_picture
-                );
-
-                console.log("File details:", {
-                    name: formData.profile_picture.name,
-                    type: formData.profile_picture.type,
-                    size: formData.profile_picture.size,
-                });
-            }
-
-            console.log("formdata", formData);
-
-            const token = localStorage.getItem("token");
-            if (!token) {
-                throw new Error("No token found! Please log in.");
-            }
-
-            const response = await axios.put(
-                `http://localhost:8000/api/users/profile`,
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    },
-                }
-            );
-            console.log("response", response);
-        } catch (error) {
-            console.error("Full error:", error);
-            console.error("Response data:", error.response?.data);
-            console.error("Response status:", error.response?.status);
-            alert("Failed to update profile. Please try again.");
+        const token = localStorage.getItem("token");
+        if (!token) {
+            throw new Error("No token found! Please log in.");
         }
-    };
+
+        // Create a FormData instance
+        const formDataToSend = new FormData();
+        formDataToSend.append("name", formData.name);
+        formDataToSend.append("email", formData.email);
+
+        // Append the file only if it exists
+        if (formData.profile_picture) {
+            formDataToSend.append("profile_picture", formData.profile_picture);
+        }
+
+        // If you need to include the file name
+        formDataToSend.append("profile_picture_name", formData.profile_picture_name);
+console.log("for",formDataToSend)
+        const response = await axios.put(
+            `http://localhost:8000/api/users/profile`,
+            formDataToSend,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    // 'Content-Type': 'multipart/form-data', // Important for file uploads
+                },
+            }
+        );
+
+        console.log("response", response);
+    } catch (error) {
+        console.error("Full error:", error);
+        console.error("Response data:", error.response?.data);
+        console.error("Response status:", error.response?.status);
+        alert("Failed to update profile. Please try again.");
+    }
+};
+
 
     const handlePasswordChange = (e) => {
         setPasswordData({
@@ -168,24 +160,22 @@ const Profile = () => {
     const handleLogout = async () => {
         try {
             const response = await axios.post(
-                "http://localhost:8000/logout",
-                {},
+                "http://localhost:8000/api/logout",
+                user,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem(
                             "token"
-                        )}`, // Pass token in headers
+                        )}`, 
                     },
                 }
             );
 
-            if (response.ok) {
-                // Logout success: clear the token
+            if (response.success) {
                 localStorage.removeItem("token");
                 router.push("/auth/login");
             } else {
-                // Handle logout error
-                console.error("Failed to log out:", response.statusText);
+                console.error("Failed to log out:", response.message);
             }
         } catch (error) {
             console.error("Error during logout:", error);

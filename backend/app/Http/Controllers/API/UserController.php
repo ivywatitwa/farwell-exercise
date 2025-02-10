@@ -15,42 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    public function updateProfile($id)
-    {
-        $user = Auth::user();
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'string|max:255',
-            'profile_picture' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        if ($request->hasFile('profile_picture')) {
-            // Delete old profile picture if it exists
-            if ($user->profile_picture) {
-                Storage::delete('public/' . $user->profile_picture);
-            }
-
-            $image = $request->file('profile_picture');
-            $imageName = time() . '.' . $image->getClientOriginalExtension();
-            $imagePath = $image->storeAs('public/profile_pictures', $imageName); // Store in storage/app/public/profile_pictures
-
-            $user->profile_picture = 'profile_pictures/' . $imageName; // Store relative path in database
-        }
-
-        if ($request->filled('name')) {
-            $user->name = $request->name;
-        }
-
-        $user->save();
-
-        return response()->json(['message' => 'Profile updated successfully', 'user' => $user], 200);
-    }
-
-    public function show($id)
+   public function show($id)
     {
         $logUser = Auth::user();
 
@@ -95,29 +60,33 @@ class UserController extends Controller
 
     public function update(Request $request)
     {
-        try {
-            Log::info($request->all());
-            $user = Auth::user();
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $user->id,
-                'profile_picture' => 'nullable|file|mimes:jpeg,png,jpg,gif'
+        $request->merge(['_method' => 'PUT']);
+    
+        $user = Auth::user();
+    
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'profile_picture' => 'nullable|image|max:2048'
+        ]);
+    
+        if ($request->hasFile('profile_picture')) {
+            Log::info("File received:", [
+                'name' => $request->file('profile_picture')->getClientOriginalName(),
+                'type' => $request->file('profile_picture')->getMimeType(),
+                'size' => $request->file('profile_picture')->getSize()
             ]);
-
-            if ($request->hasFile('profile_picture')) {
-                if ($user->profile_picture) {
-                    Storage::delete($user->profile_picture);
-                }
-
-                $path = $request->file('profile_picture')->store('profile-pictures', 'public');
-                $validated['profile_picture'] = $path;
+    
+            if ($user->profile_picture) {
+                Storage::delete($user->profile_picture);
             }
-
-            $user->update($validated);
-
-            return response()->json($user);
-        } catch (\Exception $e) {
-            Log::info($e->getMessage());
+    
+            $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+            $validated['profile_picture'] = $path;
         }
+    
+        $user->update($validated);
+    
+        return response()->json($user);
     }
 }

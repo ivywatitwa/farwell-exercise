@@ -40,12 +40,18 @@ const Profile = () => {
                     },
                 }
             );
-            setUser(response.data);
+
+            setUser({
+                ...response.data,
+                profile_picture_url: response.data.profile_picture
+                    ? `http://localhost:8000/storage/${response.data.profile_picture}` 
+                    : "",
+            });
+
             setFormData({
                 name: response.data.name,
                 email: response.data.email,
                 profile_picture: null,
-                profile_picture_name: "",
             });
         } catch (error) {
             console.error("Error fetching profile:", error);
@@ -65,13 +71,11 @@ const Profile = () => {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // No need to store the filename separately
             setFormData((prev) => ({
                 ...prev,
                 profile_picture: file,
             }));
 
-            // Clean up previous preview URL to prevent memory leaks
             if (imagePreview) {
                 URL.revokeObjectURL(imagePreview);
             }
@@ -80,50 +84,50 @@ const Profile = () => {
     };
 
     const handleUpdateProfile = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    try {
-        console.log("formdata", formData);
+        try {
+            let formDataToSend = new FormData();
 
-        const token = localStorage.getItem("token");
-        if (!token) {
-            throw new Error("No token found! Please log in.");
-        }
+            formDataToSend.append("_method", "PUT"); 
+            formDataToSend.append("name", formData.name);
+            formDataToSend.append("email", formData.email);
 
-        // Create a FormData instance
-        const formDataToSend = new FormData();
-        formDataToSend.append("name", formData.name);
-        formDataToSend.append("email", formData.email);
-
-        // Append the file only if it exists
-        if (formData.profile_picture) {
-            formDataToSend.append("profile_picture", formData.profile_picture);
-        }
-
-        // If you need to include the file name
-        formDataToSend.append("profile_picture_name", formData.profile_picture_name);
-console.log("for",formDataToSend)
-        const response = await axios.put(
-            `http://localhost:8000/api/users/profile`,
-            formDataToSend,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    // 'Content-Type': 'multipart/form-data', // Important for file uploads
-                },
+            if (formData.profile_picture instanceof File) {
+                formDataToSend.append(
+                    "profile_picture",
+                    formData.profile_picture
+                );
             }
-        );
 
-        console.log("response", response);
-    } catch (error) {
-        console.error("Full error:", error);
-        console.error("Response data:", error.response?.data);
-        console.error("Response status:", error.response?.status);
-        alert("Failed to update profile. Please try again.");
-    }
-};
+            const token = localStorage.getItem("token");
+            if (!token) {
+                throw new Error("No token found! Please log in.");
+            }
 
+            for (let [key, value] of formDataToSend.entries()) {
+                console.log(`FormData -> ${key}:`, value);
+            }
+
+            const response = await axios.post(
+                `http://localhost:8000/api/users/profile`, 
+                formDataToSend,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true, 
+                }
+            );
+
+            console.log("Profile updated successfully:", response.data);
+        } catch (error) {
+            console.error("Full error:", error);
+            console.error("Response data:", error.response?.data);
+            console.error("Response status:", error.response?.status);
+            alert("Failed to update profile. Please try again.");
+        }
+    };
 
     const handlePasswordChange = (e) => {
         setPasswordData({
@@ -166,7 +170,7 @@ console.log("for",formDataToSend)
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem(
                             "token"
-                        )}`, 
+                        )}`,
                     },
                 }
             );
@@ -202,16 +206,16 @@ console.log("for",formDataToSend)
                             {!isEditing && !showPasswordForm ? (
                                 <div className="space-y-4">
                                     <div className="flex justify-center mb-6">
-                                        <div className="relative w-32 h-32 rounded-full overflow-hidden">
+                                        <div className="relative w-32 h-32 rounded overflow-hidden">
                                             {user?.profile_picture_url ? (
                                                 <Image
                                                     src={
                                                         user.profile_picture_url
                                                     }
                                                     alt="Profile"
-                                                    layout="fill"
-                                                    objectFit="cover"
-                                                    className="rounded-full"
+                                                    width={120}
+                                                    height={148}
+                                                    className="rounded"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -282,7 +286,7 @@ console.log("for",formDataToSend)
                                                 />
                                             )}
                                             <label className="block mt-4 text-center cursor-pointer">
-                                                <span className="text-sm text-primary-600 hover:text-primary-700">
+                                                <span className="text-sm text-blue-600 hover:text-blue-700">
                                                     Change Photo
                                                 </span>
                                                 <input

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 const Register = () => {
     const router = useRouter();
@@ -14,6 +15,11 @@ const Register = () => {
         confirmPassword: "",
         termsAccepted: false,
     });
+    const [isVisible, setIsVisible] = useState(false);
+
+    const toggleVisibility = () => {
+        setIsVisible((prev) => !prev);
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -55,9 +61,7 @@ const Register = () => {
                     `Registration successful! Use the code ${response.data.activation_code} to activate your account.`
                 );
 
-                router.push(
-                    `/auth/activate?email=${formData.email}`
-                );
+                router.push(`/auth/activate?email=${formData.email}`);
 
                 setFormData({
                     name: "",
@@ -135,16 +139,30 @@ const Register = () => {
                                 >
                                     Password
                                 </label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    id="password"
-                                    value={formData.password}
-                                    onChange={handleChange} autoComplete="new_password"
-                                    placeholder="••••••••"
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    required
-                                />
+                                <div className="relative w-full">
+                                    <input
+                                        type={isVisible ? "text" : "password"}
+                                        name="password"
+                                        id="password"
+                                        placeholder="••••••••"
+                                        className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        required
+                                        value={formData.password}
+                                        autoComplete="password"
+                                        onChange={handleChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsVisible(!isVisible)}
+                                        className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                                    >
+                                        {isVisible ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label
@@ -153,16 +171,31 @@ const Register = () => {
                                 >
                                     Confirm password
                                 </label>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    id="confirmPassword"
-                                    value={formData.confirmPassword}  autoComplete="new_password_confirmation"
-                                    onChange={handleChange}
-                                    placeholder="••••••••"
-                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                    required
-                                />
+
+                                <div className="relative w-full">
+                                    <input
+                                        type={isVisible ? "text" : "password"}
+                                        name="confirmPassword"
+                                        id="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        autoComplete="new_password_confirmation"
+                                        placeholder="••••••••"
+                                        className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 pr-10 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                        required
+                                        onChange={handleChange}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsVisible(!isVisible)}
+                                        className="absolute inset-y-0 right-3 flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+                                    >
+                                        {isVisible ? (
+                                            <EyeOff className="h-5 w-5" />
+                                        ) : (
+                                            <Eye className="h-5 w-5" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                             <div className="flex items-start">
                                 <div className="flex items-center h-5">

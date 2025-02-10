@@ -103,11 +103,13 @@ class AuthenticationController extends Controller
         if (Auth::check()) {
             Auth::user()->currentAccessToken()->delete();
             return response()->json([
+                'success' => true,
                 'message' => 'Successfully logged out'
             ]);
         }
 
         return response()->json([
+            'success' =>false,
             'message' => 'No active session'
         ], 401);
     }

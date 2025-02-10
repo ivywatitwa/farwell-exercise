@@ -9,7 +9,7 @@ use App\Models\CsvData;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class CsvDataController extends Controller
 {
@@ -32,12 +32,11 @@ class CsvDataController extends Controller
             $filename = uniqid() . '_' . $file->getClientOriginalName();
             $filePath = $file->storeAs('uploads', $filename, 'public');
 
-            // Store the file path in the database
             $csvData = new CsvData();
             $csvData->file_path = $filePath;
+            $csvData->user_id = Auth::id();
             $csvData->save();
 
-            // Clear the cache after processing to ensure updated data.
             Cache::forget('csv_data');
 
             return response()->json([
@@ -45,6 +44,7 @@ class CsvDataController extends Controller
                 'file_path' => $filePath,
             ], 200);
         } catch (\Exception $e) {
+            Log:info($e);
             return response()->json([
                 'message' => 'File upload failed.',
                 'error' => $e->getMessage(),
@@ -55,31 +55,20 @@ class CsvDataController extends Controller
 
     public function getData()
     {
-        return Cache::remember('csv_data', 300, function () {
-            return CsvData::all();
+        $userId = Auth::id(); 
+
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $cacheKey = 'csv_data_user_' . $userId; 
+        $cacheTtl = 3600;
+
+        $data = Cache::remember($cacheKey, $cacheTtl, function () use ($userId) {
+            return CsvData::where('user_id', $userId)->get();
         });
-    }
 
-    public function clearCache()
-    {
-        Cache::forget('csv_data');
-        return response()->json(['message' => 'Cache cleared successfully.']);
-    }
+        return response()->json($data)->header('Cache-Control', 'public, max-age=' . $cacheTtl); }
 
-    public function show($id)
-    {
-        $cacheKey = 'csv_data_' . $id;
-
-        return Cache::remember($cacheKey, 300, function () use ($id) {
-            $data = CsvData::find($id);
-
-            if (!$data) {
-                return response()->json(['message' => 'Data not found.'], 404);
-            }
-
-            return $data;
-        });
-    }
     public function getCsvContent($id)
     {
         $csvData = CsvData::find($id);
@@ -112,10 +101,11 @@ class CsvDataController extends Controller
                 $result[] = $record;
             }
 
+            $cacheTtl = 3600;
             return response()->json([
                 'header' => $header,
                 'data' => $result,
-            ], 200);
+            ])->header('Cache-Control', 'public, max-age=' . $cacheTtl);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error reading CSV file.',

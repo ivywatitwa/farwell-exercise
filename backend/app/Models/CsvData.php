@@ -10,6 +10,12 @@ class CsvData extends Model
     use HasFactory;
 
     protected $fillable = [
-        'file_path'
+        'file_path',
+        'user_id'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

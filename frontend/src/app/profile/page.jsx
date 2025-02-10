@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 
 const Profile = () => {
     const [user, setUser] = useState(null);
@@ -157,27 +158,30 @@ const Profile = () => {
                 passwordData,
                 {
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
                     },
                 }
             );
-            setShowPasswordForm(false);
-            setPasswordData({
-                current_password: "",
-                new_password: "",
-                new_password_confirmation: "",
-            });
+
             alert("Password updated successfully!");
+            localStorage.removeItem("token");
+            router.push("auth/login");
         } catch (error) {
-            if (error.response && error.response.data && error.response.data.message) {
-                alert(error.response.data.message); 
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ) {
+                alert(error.response.data.message);
             } else {
                 alert("An unexpected error occurred. Please try again.");
             }
             console.error("Error updating password:", error);
         }
     };
-    
+
     const handleLogout = async () => {
         try {
             const response = await axios.post(
@@ -273,6 +277,11 @@ const Profile = () => {
                                             className="px-4 py-2 border border-gray-300 text-gray-400 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                                         >
                                             Change Password
+                                        </button>{" "}
+                                        <button className="px-4 py-2 border border-gray-300 text-white rounded-lg hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
+                                            <Link href="/fileUpload">
+                                                Upload CSV
+                                            </Link>
                                         </button>
                                         <button
                                             onClick={handleLogout}

@@ -32,11 +32,11 @@ class StoreChangePasswordRequest extends FormRequest
                 'string',
                 'min:8',
                 'confirmed',
-                // Password::min(8)
-                //     ->letters()
-                //     ->mixedCase()
-                //     ->numbers()
-                //     ->symbols(),
+                Password::min(8)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols(),
                 'different:current_password'
             ],
         ];

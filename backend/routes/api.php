@@ -16,7 +16,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/profile', [UserController::class, 'update']);
     Route::put('/users/password', [UserController::class, 'changePassword']);
-Route::post('/upload-csv', [CsvDataController::class, 'upload']);
-Route::get('/csv-data', [CsvDataController::class, 'getData']);
+    Route::post('/upload-csv', [CsvDataController::class, 'upload']);
+    Route::get('/csv/content/{id}', [CsvDataController::class, 'getCsvContent']);
+    Route::get('/csv/data', [CsvDataController::class, 'getData']);
 });
-

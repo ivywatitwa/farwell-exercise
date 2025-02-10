@@ -98,16 +98,18 @@ class AuthenticationController extends Controller
         ], 400);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         if (Auth::check()) {
             Auth::user()->currentAccessToken()->delete();
             return response()->json([
+                'success' => true,
                 'message' => 'Successfully logged out'
             ]);
         }
 
         return response()->json([
+            'success' =>false,
             'message' => 'No active session'
         ], 401);
     }
